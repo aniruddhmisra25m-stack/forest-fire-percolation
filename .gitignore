@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# virtual environments
+.venv/
+venv/
+env/
+
+# raw simulation output (regenerate with scripts/burn_sweep.py)
+data/*.csv
+
+# quick smoke-test outputs
+results/*_quick.*
+
+# editors / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp

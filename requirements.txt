@@ -1,0 +1,10 @@
+# Runtime dependencies (the same as pyproject.toml).
+# Recommended instead:  pip install -e ".[dev]"
+numpy>=1.22
+scipy>=1.8
+pandas>=1.4
+matplotlib>=3.5
+# tests
+pytest>=7
+# optional, only for exploratory/ml_classifier.py
+# scikit-learn>=1.0

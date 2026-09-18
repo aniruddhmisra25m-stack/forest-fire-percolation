@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "firesim"
+version = "0.1.0"
+description = "A forest-fire cellular automaton validated against exact percolation theory"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Aniruddh Misra" }]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.22",
+    "scipy>=1.8",
+    "pandas>=1.4",
+    "matplotlib>=3.5",
+]
+keywords = ["cellular automata", "percolation", "forest fire", "phase transition", "monte carlo"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+ml = ["scikit-learn>=1.0"]
+geo = ["rasterio>=1.3"]           # reading canopy-cover GeoTIFFs
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
