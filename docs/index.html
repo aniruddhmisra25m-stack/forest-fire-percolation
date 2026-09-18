@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--PAGE-START-->
+<title>Fire Lattice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ground: #fcfcfb;
+  --raised: #f4f3ef;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #7a7873;
+  --hair: #e1e0d9;
+  --axis: #c3c2b7;
+  --rule-a: #2a78d6;
+  --rule-b: #eb6834;
+  --tree: #008300;
+  --fire: #eda100;
+  --ash: #898781;
+  --empty: #f0efec;
+  --on-ink: #fcfcfb;
+  --rule: var(--rule-b);
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #1a1a19; --raised: #222220; --ink: #ffffff; --ink-2: #c3c2b7;
+    --muted: #9c9a93; --hair: #2c2c2a; --axis: #45443f;
+    --rule-a: #3987e5; --rule-b: #d95926; --empty: #0d0d0d; --on-ink: #1a1a19;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #1a1a19; --raised: #222220; --ink: #ffffff; --ink-2: #c3c2b7;
+  --muted: #9c9a93; --hair: #2c2c2a; --axis: #45443f;
+  --rule-a: #3987e5; --rule-b: #d95926; --empty: #0d0d0d; --on-ink: #1a1a19;
+  color-scheme: dark;
+}
+:root.rule-A { --rule: var(--rule-a); }
+:root.rule-B { --rule: var(--rule-b); }
+
+* { box-sizing: border-box; }
+html, body { background: var(--ground); }
+body {
+  margin: 0;
+  color: var(--ink);
+  font: 15px/1.55 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding-inline: 20px;
+  padding-block: 28px 48px;
+}
+.masthead { display: grid; gap: 10px; margin-bottom: 26px; max-width: 70ch; }
+.kicker {
+  margin: 0;
+  font: 500 12px/1.2 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+h1 {
+  margin: 0;
+  font: 750 clamp(40px, 7vw, 68px)/0.95 var(--display);
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.lede { margin: 4px 0 0; color: var(--ink-2); font-size: 16.5px; text-wrap: pretty; }
+.lede b { color: var(--ink); font-weight: 600; }
+
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 880px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+
+.board { display: grid; gap: 12px; }
+.canvas-frame { position: relative; }
+canvas#lattice {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: var(--empty);
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--hair);
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+.edge-tag {
+  position: absolute; top: 8px;
+  font: 500 11px/1 var(--mono); letter-spacing: 0.04em;
+  color: var(--on-ink); background: var(--ink); opacity: 0.82;
+  padding: 5px 7px; border-radius: 3px; pointer-events: none;
+}
+.edge-tag.left { left: 8px; }
+.edge-tag.right { right: 8px; }
+
+.readout {
+  display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline;
+  font: 400 13px/1.4 var(--mono); color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.readout strong { color: var(--ink); font-weight: 500; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 500 12px/1 var(--mono); padding: 5px 8px; border-radius: 999px;
+  border: 1px solid var(--hair); color: var(--ink-2); background: var(--raised);
+}
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.pill.burning::before { background: var(--fire); }
+.pill.crossed::before { background: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 11px; height: 11px; border-radius: 2px; display: inline-block; box-shadow: 0 0 0 1px var(--hair); }
+
+.panel { display: grid; gap: 18px; }
+.field { display: grid; gap: 6px; }
+.field-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.field label, .field .label { font-weight: 600; font-size: 13.5px; }
+.field .hint { color: var(--muted); font-size: 12.5px; }
+.value { font: 500 14px/1 var(--mono); font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--rule); margin: 0; height: 22px; }
+
+.segmented {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+  border: 1px solid var(--hair); border-radius: 6px; padding: 3px; gap: 3px;
+  background: var(--raised);
+}
+.segmented input { position: absolute; opacity: 0; pointer-events: none; }
+.segmented label {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 7px 8px; border-radius: 4px; font-size: 13px; font-weight: 500;
+  color: var(--ink-2); cursor: pointer; text-align: center; line-height: 1.2;
+}
+.segmented input:checked + label { background: var(--ground); color: var(--ink); box-shadow: 0 0 0 1px var(--hair), 0 1px 2px rgba(0,0,0,0.06); }
+.segmented input:focus-visible + label { outline: 2px solid var(--rule); outline-offset: 1px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.dot.a { background: var(--rule-a); }
+.dot.b { background: var(--rule-b); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+button {
+  font: 500 13.5px/1 var(--body);
+  padding: 10px 14px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--hair); background: var(--ground); color: var(--ink);
+}
+button:hover { border-color: var(--axis); }
+button:focus-visible { outline: 2px solid var(--rule); outline-offset: 2px; }
+button.primary { background: var(--ink); color: var(--on-ink); border-color: var(--ink); min-width: 7.5em; }
+button.primary:hover { opacity: 0.88; }
+button:disabled { opacity: 0.45; cursor: default; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chips .label { font-size: 12.5px; color: var(--muted); margin-right: 2px; }
+.chips button { padding: 7px 10px; font-size: 12.5px; border-radius: 999px; }
+
+.phase { margin: 0; display: grid; gap: 8px; }
+.phase svg { width: 100%; height: auto; display: block; touch-action: none; cursor: crosshair; }
+.phase figcaption { font-size: 12.5px; color: var(--ink-2); }
+.phase .verdict { font-size: 13.5px; color: var(--ink); }
+.phase .verdict b { font-weight: 600; }
+svg .grid { stroke: var(--hair); stroke-width: 1; }
+svg .axis { stroke: var(--axis); stroke-width: 1; }
+svg .tick { fill: var(--muted); font: 10px var(--mono); }
+svg .title { fill: var(--ink-2); font: 500 11px var(--body); }
+svg .region { fill: var(--rule); opacity: 0.10; }
+svg .line-A { stroke: var(--rule-a); fill: none; stroke-linejoin: round; stroke-linecap: round; }
+svg .line-B { stroke: var(--rule-b); fill: none; stroke-linejoin: round; stroke-linecap: round; }
+svg .lit { fill: var(--ground); stroke: var(--ink-2); stroke-width: 1.1; }
+svg .cross { stroke: var(--muted); stroke-width: 1; }
+svg .marker { fill: var(--ink); stroke: var(--ground); stroke-width: 2.5; }
+svg .region-label { fill: var(--ink-2); font: 500 10.5px var(--body); }
+
+.batch { display: grid; gap: 8px; padding-top: 14px; border-top: 1px solid var(--hair); }
+.meter { height: 8px; border-radius: 4px; background: var(--raised); box-shadow: inset 0 0 0 1px var(--hair); overflow: hidden; }
+.meter > i { display: block; height: 100%; width: 0; background: var(--rule); border-radius: 4px; transition: width 0.25s ease; }
+.batch p { margin: 0; font-size: 13px; color: var(--ink-2); }
+.batch p strong { color: var(--ink); font-family: var(--mono); font-weight: 500; }
+
+.notes {
+  margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--hair);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px;
+}
+@media (max-width: 880px) { .notes { grid-template-columns: minmax(0, 1fr); } }
+.notes h2 { margin: 0 0 6px; font: 600 19px/1.2 var(--display); letter-spacing: -0.01em; }
+.notes p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.notes code { font: 13px var(--mono); color: var(--ink); }
+.foot { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 80ch; }
+.foot a, .notes a { color: var(--ink); }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .meter > i { transition: none; } }
+</style>
+<!--HEAD-END-->
+</head>
+<body>
+<!--BODY-START-->
+<main class="wrap">
+  <header class="masthead">
+    <p class="kicker">Forest-fire cellular automaton · square lattice</p>
+    <h1>Fire Lattice</h1>
+    <p class="lede">Plant a forest with tree density <b>D</b>, let fire jump to each neighbouring
+      tree with probability <b>p</b>, and look for the tipping point. Below a critical density
+      every fire fizzles out; just above it, fire finds a path across the whole forest.</p>
+  </header>
+
+  <section class="stage">
+    <div class="board">
+      <div class="canvas-frame">
+        <canvas id="lattice" width="160" height="160"
+                aria-label="Forest lattice. Click a tree to set it on fire."></canvas>
+        <span class="edge-tag left" id="tag-left">lit edge</span>
+        <span class="edge-tag right" id="tag-right">goal edge</span>
+      </div>
+      <div class="readout" aria-hidden="true">
+        <span id="status-pill" class="pill">ready</span>
+        <span>step <strong id="r-step">0</strong></span>
+        <span>burned <strong id="r-burned">0.0%</strong> of <strong id="r-trees">0</strong> trees</span>
+        <span id="r-cross"></span>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="swatch" style="background:var(--tree)"></i>tree</span>
+        <span><i class="swatch" style="background:var(--fire)"></i>burning</span>
+        <span><i class="swatch" style="background:var(--ash)"></i>ash</span>
+        <span><i class="swatch" style="background:var(--empty)"></i>empty ground</span>
+        <span style="color:var(--muted)">click any tree to light it</span>
+      </div>
+      <p id="live" class="sr-only" aria-live="polite"></p>
+    </div>
+
+    <div class="panel">
+      <div class="field">
+        <div class="field-head">
+          <label for="density">Tree density D</label>
+          <span class="value" id="density-out">0.660</span>
+        </div>
+        <input id="density" type="range" min="0" max="1" step="0.005" value="0.66">
+      </div>
+      <div class="field">
+        <div class="field-head">
+          <label for="spread">Spread probability p</label>
+          <span class="value" id="spread-out">0.90</span>
+        </div>
+        <input id="spread" type="range" min="0" max="1" step="0.01" value="0.9">
+      </div>
+
+      <div class="field">
+        <span class="label" id="rule-label">How a tree catches fire</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="rule-label">
+          <input type="radio" name="rule" id="rule-a" value="A">
+          <label for="rule-a"><i class="dot a"></i>Rule A · one try per step</label>
+          <input type="radio" name="rule" id="rule-b" value="B" checked>
+          <label for="rule-b"><i class="dot b"></i>Rule B · one try per burning neighbour</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label" id="ign-label">Where the fire starts</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="ign-label">
+          <input type="radio" name="ignition" id="ign-left" value="left" checked>
+          <label for="ign-left">Left edge</label>
+          <input type="radio" name="ignition" id="ign-center" value="center">
+          <label for="ign-center">Centre tree</label>
+          <input type="radio" name="ignition" id="ign-click" value="click">
+          <label for="ign-click">Where I click</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <label for="size">Forest size</label>
+          <span class="value" id="size-out">160 × 160</span>
+        </div>
+        <input id="size" type="range" min="0" max="3" step="1" value="2">
+      </div>
+      <div class="field">
+        <div class="field-head">
+          <label for="speed">Speed</label>
+          <span class="value" id="speed-out">40 steps/s</span>
+        </div>
+        <input id="speed" type="range" min="0" max="5" step="1" value="2">
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="go" type="button">Ignite</button>
+        <button id="step" type="button">Step</button>
+        <button id="replant" type="button">New forest</button>
+      </div>
+      <div class="chips">
+        <span class="label">Jump to</span>
+        <button type="button" data-preset="-0.05">below the tipping point</button>
+        <button type="button" data-preset="0">right at it</button>
+        <button type="button" data-preset="0.06">above it</button>
+      </div>
+
+      <figure class="phase">
+        <svg id="phase" viewBox="0 0 360 250" role="img"
+             aria-label="Phase diagram: critical tree density against spread probability for both rules"></svg>
+        <p class="verdict" id="verdict"></p>
+        <figcaption>
+          <span class="legend">
+            <span><i class="dot a"></i>rule A critical line</span>
+            <span><i class="dot b"></i>rule B critical line</span>
+            <span><i class="swatch" style="background:var(--ground);border-radius:50%;box-shadow:0 0 0 1.1px var(--ink-2)"></i>published thresholds</span>
+          </span>
+          Drag on the diagram to choose p and D. Lines were measured with this project's Python
+          code on <span id="crit-L">128 × 128</span> forests.
+        </figcaption>
+      </figure>
+
+      <div class="batch">
+        <div class="actions">
+          <button id="batch" type="button">Test 200 fires at these settings</button>
+        </div>
+        <div class="meter" aria-hidden="true"><i id="batch-bar"></i></div>
+        <p id="batch-out">Runs 200 separate 64 × 64 forests lit along the left edge and counts how many fires reach the right edge.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="notes">
+    <div>
+      <h2>Two ways to catch fire</h2>
+      <p><b>Rule A</b> gives a tree one chance per time step, however many neighbours are
+        burning. <b>Rule B</b> gives it one chance per burning neighbour, so a tree surrounded
+        by fire is more likely to go up. At p = 1 the rules are identical; below that, rule A
+        needs a denser forest before fire can cross.</p>
+    </div>
+    <div>
+      <h2>Why the line is sharp</h2>
+      <p>Rule B is exactly <em>site-bond percolation</em>: fire crosses when a chain of trees
+        joined by "successful" links spans the forest. On an infinite lattice the chance of that
+        jumps from 0 to 1 at the critical line. At p = 1 it sits at D = 0.5927; at D = 1 it sits
+        at p = 1/2.</p>
+    </div>
+    <div>
+      <h2>Try this</h2>
+      <p>Set p to 1 and slide D through 0.59: the burned area goes from a thin strip to the
+        whole forest. Then press <em>Test 200 fires</em> a little below and a little above the
+        line, and switch the forest size to see the transition sharpen.</p>
+    </div>
+  </section>
+  <p class="foot">Part of the <code>forest-fire-percolation</code> project. Critical lines come
+    from <code>results/phase_diagram.csv</code>; the hollow dots are site-bond thresholds
+    published by Tarasevich &amp; van der Marck (1999) plus the exact site and bond
+    percolation points. This page runs the same update rules as the Python package, with its
+    own random numbers.</p>
+</main>
+
+<script id="critical-lines" type="application/json">
+{"L":128,"A":[[0.5377,1.0],[0.55,0.9814],[0.5712,0.95],[0.6,0.9105],[0.6093,0.9],[0.65,0.8512],[0.6521,0.85],[0.7,0.8006],[0.75,0.7552],[0.8,0.7153],[0.85,0.6794],[0.9,0.6482],[0.95,0.619],[1.0,0.5928]],"B":[[0.4998,1.0],[0.5333,0.95],[0.55,0.9275],[0.5717,0.9],[0.6,0.867],[0.6154,0.85],[0.65,0.8162],[0.7,0.7709],[0.75,0.7317],[0.8,0.6977],[0.85,0.6664],[0.9,0.6396],[0.95,0.6158],[1.0,0.5923]],"lit":[[0.5,1.0],[0.5334,0.95],[0.5716,0.9],[0.6,0.8671],[0.6154,0.85],[0.65,0.8157],[0.6663,0.8],[0.7,0.7709],[0.7257,0.75],[0.75,0.7322],[0.7961,0.7],[0.8,0.698],[0.85,0.6673],[0.8807,0.65],[0.9,0.6396],[0.95,0.6149],[0.984,0.6],[1.0,0.5927]]}
+</script>
+<script>
+(() => {
+  "use strict";
+  const EMPTY = 0, TREE = 1, BURNING = 2, ASH = 3;
+  const SIZES = [64, 96, 160, 256];
+  const SPEEDS = [6, 15, 40, 100, 300, Infinity];
+  const CRIT = JSON.parse(document.getElementById("critical-lines").textContent);
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------------------------------------------------------- model
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function plant(L, D, seed) {
+    const W = L + 2;
+    const state = new Uint8Array(W * W);
+    const rng = mulberry32(seed);
+    let trees = 0;
+    for (let r = 1; r <= L; r++) {
+      const row = r * W;
+      for (let c = 1; c <= L; c++) {
+        if (rng() < D) { state[row + c] = TREE; trees++; }
+      }
+    }
+    return { L, W, D, seed, state, stamp: new Int32Array(W * W), stepId: 0,
+             rng: mulberry32(Math.imul(seed, 2654435761) ^ 0x5bd1e995),
+             front: [], steps: 0, trees, burned: 0, crossed: false, lit: false };
+  }
+
+  function light(sim, cells) {
+    for (const i of cells) {
+      if (sim.state[i] === TREE) {
+        sim.state[i] = BURNING;
+        sim.front.push(i);
+        if (i % sim.W === sim.L) sim.crossed = true;
+      }
+    }
+    sim.lit = sim.lit || sim.front.length > 0;
+  }
+
+  function lightEdge(sim) {
+    const cells = [];
+    for (let r = 1; r <= sim.L; r++) cells.push(r * sim.W + 1);
+    light(sim, cells);
+  }
+
+  function lightCentre(sim) {
+    const c = Math.floor(sim.L / 2) + 1;
+    const i = c * sim.W + c;
+    if (sim.state[i] === EMPTY) { sim.state[i] = TREE; sim.trees++; }
+    light(sim, [i]);
+  }
+
+  // one synchronous time step; same rules as firesim/model.py
+  function step(sim, p, rule) {
+    const { state, stamp, W, L } = sim;
+    const id = ++sim.stepId;
+    const off = [-W, W, -1, 1];
+    const next = [];
+    if (rule === "A") {
+      const exposed = [];
+      for (const b of sim.front) {
+        for (let k = 0; k < 4; k++) {
+          const n = b + off[k];
+          if (state[n] === TREE && stamp[n] !== id) { stamp[n] = id; exposed.push(n); }
+        }
+      }
+      for (const n of exposed) if (p >= 1 || sim.rng() < p) next.push(n);
+    } else {
+      for (const b of sim.front) {
+        for (let k = 0; k < 4; k++) {
+          const n = b + off[k];
+          if (state[n] === TREE && stamp[n] !== id && (p >= 1 || sim.rng() < p)) {
+            stamp[n] = id; next.push(n);
+          }
+        }
+      }
+    }
+    for (const b of sim.front) state[b] = ASH;
+    sim.burned += sim.front.length;
+    for (const n of next) {
+      state[n] = BURNING;
+      if (n % W === L) sim.crossed = true;
+    }
+    sim.front = next;
+    sim.steps++;
+  }
+
+  // ------------------------------------------------------------- critical line
+  function criticalDensity(rule, p) {
+    const pts = CRIT[rule];
+    if (p < pts[0][0]) return null;          // no density is enough
+    for (let i = 1; i < pts.length; i++) {
+      const [p0, d0] = pts[i - 1], [p1, d1] = pts[i];
+      if (p <= p1) return d0 + (d1 - d0) * (p - p0) / (p1 - p0 || 1);
+    }
+    return pts[pts.length - 1][1];
+  }
+
+  // ------------------------------------------------------------------- state
+  const params = { D: 0.66, p: 0.9, rule: "B", ignition: "left", sizeIdx: 2, speedIdx: reduceMotion ? 5 : 2 };
+  let sim = null, seed = 20260917, running = false, lastT = 0, acc = 0;
+
+  const canvas = $("lattice");
+  const ctx = canvas.getContext("2d");
+  let image = null, lut = null;
+
+  function readColours() {
+    const css = getComputedStyle(document.documentElement);
+    const hex = (name) => {
+      const v = css.getPropertyValue(name).trim();
+      const m = /^#?([0-9a-f]{6})$/i.exec(v);
+      const n = parseInt(m ? m[1] : "888888", 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    };
+    lut = [hex("--empty"), hex("--tree"), hex("--fire"), hex("--ash")];
+  }
+
+  function render() {
+    const { state, W, L } = sim;
+    if (!image || image.width !== L) {
+      canvas.width = L; canvas.height = L;
+      image = ctx.createImageData(L, L);
+    }
+    const data = image.data;
+    let j = 0;
+    for (let r = 1; r <= L; r++) {
+      let i = r * W + 1;
+      for (let c = 0; c < L; c++, i++) {
+        const col = lut[state[i]];
+        data[j++] = col[0]; data[j++] = col[1]; data[j++] = col[2]; data[j++] = 255;
+      }
+    }
+    ctx.putImageData(image, 0, 0);
+  }
+
+  function status() {
+    const pct = sim.trees ? 100 * (sim.burned + sim.front.length) / sim.trees : 0;
+    $("r-step").textContent = sim.steps;
+    $("r-burned").textContent = pct.toFixed(1) + "%";
+    $("r-trees").textContent = sim.trees.toLocaleString("en");
+    const pill = $("status-pill");
+    let text = "ready", cls = "pill";
+    if (sim.front.length) { text = running ? "burning" : "paused"; cls += " burning"; }
+    else if (sim.lit) { text = "fire out"; }
+    pill.className = cls; pill.textContent = text;
+    const edge = params.ignition === "left";
+    $("r-cross").textContent = !sim.lit || !edge ? "" :
+      sim.crossed ? "reached the goal edge" : (sim.front.length ? "" : "never reached the goal edge");
+    $("tag-left").hidden = !edge;
+    $("tag-right").hidden = !edge;
+    const go = $("go");
+    go.textContent = running ? "Pause" : sim.front.length ? "Resume" : sim.lit ? "Run again" : "Ignite";
+  }
+
+  let fireRun = 0;
+  function newForest(keepSeed, newFire) {
+    stop();
+    if (!keepSeed) seed = (Math.random() * 2 ** 31) >>> 0;
+    sim = plant(SIZES[params.sizeIdx], params.D, seed);
+    // same forest, fresh random numbers for the fire itself
+    if (newFire) sim.rng = mulberry32((seed ^ Math.imul(++fireRun, 0x9E3779B1)) >>> 0);
+    render(); status();
+  }
+
+  function igniteByMode() {
+    if (params.ignition === "left") lightEdge(sim);
+    else if (params.ignition === "center") lightCentre(sim);
+  }
+
+  function start() {
+    if (!sim.front.length) {
+      // nothing is burning: start a fire (on a fresh copy of this forest if one already burned)
+      if (sim.lit) newForest(true, true);
+      if (params.ignition === "click") { status(); flash("Click a tree to light it."); return; }
+      igniteByMode();
+      if (!sim.front.length) { status(); flash("No tree to light there. Try a denser forest."); return; }
+    }
+    if (SPEEDS[params.speedIdx] === Infinity) { finish(); return; }
+    running = true; lastT = 0; acc = 0;
+    status();
+    requestAnimationFrame(loop);
+  }
+
+  function stop() { running = false; }
+
+  function finish() {
+    while (sim.front.length) step(sim, params.p, params.rule);
+    render(); ended();
+  }
+
+  function ended() {
+    running = false; status();
+    const pct = sim.trees ? (100 * sim.burned / sim.trees).toFixed(1) : "0";
+    $("live").textContent = `Fire out after ${sim.steps} steps; ${pct}% of trees burned` +
+      (params.ignition === "left" ? (sim.crossed ? "; it crossed the forest." : "; it did not cross.") : ".");
+  }
+
+  function loop(t) {
+    if (!running) return;
+    const dt = lastT ? Math.min(t - lastT, 100) : 16;
+    lastT = t;
+    acc += dt * SPEEDS[params.speedIdx] / 1000;
+    let n = Math.min(Math.floor(acc), 2000);
+    acc -= n;
+    while (n-- > 0 && sim.front.length) step(sim, params.p, params.rule);
+    render();
+    if (!sim.front.length) { ended(); return; }
+    status();
+    requestAnimationFrame(loop);
+  }
+
+  let flashTimer = 0;
+  function flash(msg) {
+    const out = $("r-cross");
+    out.textContent = msg;
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(status, 2600);
+  }
+
+  // ------------------------------------------------------------ phase diagram
+  const svg = $("phase");
+  const NS = "http://www.w3.org/2000/svg";
+  const box = { x0: 46, x1: 348, y0: 12, y1: 208, pMin: 0.4, pMax: 1.0, dMin: 0.5, dMax: 1.0 };
+  const X = (p) => box.x0 + (p - box.pMin) / (box.pMax - box.pMin) * (box.x1 - box.x0);
+  const Y = (d) => box.y1 - (d - box.dMin) / (box.dMax - box.dMin) * (box.y1 - box.y0);
+  const el = (name, attrs, parent = svg) => {
+    const e = document.createElementNS(NS, name);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    parent.appendChild(e);
+    return e;
+  };
+  let regionEl, lineEls = {}, markerEl, crossH, crossV;
+
+  function drawPhase() {
+    svg.textContent = "";
+    for (let p = 0.4; p <= 1.0001; p += 0.1) {
+      el("line", { x1: X(p), x2: X(p), y1: box.y0, y2: box.y1, class: "grid" });
+      el("text", { x: X(p), y: box.y1 + 16, class: "tick", "text-anchor": "middle" }).textContent = p.toFixed(1);
+    }
+    for (let d = 0.5; d <= 1.0001; d += 0.1) {
+      el("line", { x1: box.x0, x2: box.x1, y1: Y(d), y2: Y(d), class: "grid" });
+      el("text", { x: box.x0 - 7, y: Y(d) + 3.5, class: "tick", "text-anchor": "end" }).textContent = d.toFixed(1);
+    }
+    el("line", { x1: box.x0, x2: box.x1, y1: box.y1, y2: box.y1, class: "axis" });
+    el("line", { x1: box.x0, x2: box.x0, y1: box.y0, y2: box.y1, class: "axis" });
+    el("text", { x: (box.x0 + box.x1) / 2, y: 244, class: "title", "text-anchor": "middle" }).textContent = "spread probability p";
+    el("text", { x: 12, y: (box.y0 + box.y1) / 2, class: "title", "text-anchor": "middle",
+                 transform: `rotate(-90 12 ${(box.y0 + box.y1) / 2})` }).textContent = "tree density D";
+    regionEl = el("polygon", { class: "region" });
+    el("text", { x: box.x1 - 8, y: box.y0 + 16, class: "region-label", "text-anchor": "end" }).textContent = "fire crosses";
+    el("text", { x: box.x0 + 8, y: box.y1 - 9, class: "region-label" }).textContent = "fire dies out";
+    for (const rule of ["A", "B"]) {
+      lineEls[rule] = el("polyline", { class: `line-${rule}`,
+        points: CRIT[rule].map(([p, d]) => `${X(p)},${Y(d)}`).join(" ") });
+    }
+    for (const [p, d] of CRIT.lit) el("circle", { cx: X(p), cy: Y(d), r: 3.2, class: "lit" });
+    crossH = el("line", { class: "cross" });
+    crossV = el("line", { class: "cross" });
+    markerEl = el("circle", { r: 6.5, class: "marker" });
+    updatePhase();
+  }
+
+  function updatePhase() {
+    const pts = CRIT[params.rule];
+    const poly = pts.map(([p, d]) => `${X(p)},${Y(d)}`);
+    poly.push(`${X(1)},${Y(1)}`, `${X(pts[0][0])},${Y(1)}`);
+    regionEl.setAttribute("points", poly.join(" "));
+    for (const rule of ["A", "B"]) {
+      const active = rule === params.rule;
+      lineEls[rule].setAttribute("stroke-width", active ? 2.6 : 1.4);
+      lineEls[rule].setAttribute("opacity", active ? 1 : 0.55);
+    }
+    const cx = X(Math.min(Math.max(params.p, box.pMin), box.pMax));
+    const cy = Y(Math.min(Math.max(params.D, box.dMin), box.dMax));
+    markerEl.setAttribute("cx", cx); markerEl.setAttribute("cy", cy);
+    const outside = params.p < box.pMin || params.D < box.dMin;
+    markerEl.setAttribute("fill-opacity", outside ? 0.35 : 1);
+    Object.entries({ x1: box.x0, x2: box.x1, y1: cy, y2: cy }).forEach(([k, v]) => crossH.setAttribute(k, v));
+    Object.entries({ x1: cx, x2: cx, y1: box.y0, y2: box.y1 }).forEach(([k, v]) => crossV.setAttribute(k, v));
+
+    const dc = criticalDensity(params.rule, params.p);
+    const v = $("verdict");
+    const name = params.rule === "A" ? "rule A" : "rule B";
+    if (dc === null) {
+      v.innerHTML = `At p = ${params.p.toFixed(2)}, ${name} cannot sustain a large fire at <b>any</b> density: the line starts at p ≈ ${CRIT[params.rule][0][0].toFixed(2)}.`;
+    } else {
+      const gap = params.D - dc;
+      const where = Math.abs(gap) < 0.01 ? "right at the tipping point" :
+        gap > 0 ? `<b>above</b> the tipping point by ${gap.toFixed(3)}` : `<b>below</b> the tipping point by ${(-gap).toFixed(3)}`;
+      v.innerHTML = `Critical density for ${name} at p = ${params.p.toFixed(2)}: D<sub>c</sub> ≈ ${dc.toFixed(3)}. You are ${where}.`;
+    }
+  }
+
+  function phasePointer(ev) {
+    const rect = svg.getBoundingClientRect();
+    const sx = (ev.clientX - rect.left) / rect.width * 360;
+    const sy = (ev.clientY - rect.top) / rect.height * 250;
+    const p = box.pMin + (sx - box.x0) / (box.x1 - box.x0) * (box.pMax - box.pMin);
+    const d = box.dMin + (box.y1 - sy) / (box.y1 - box.y0) * (box.dMax - box.dMin);
+    setParams({ p: Math.round(Math.min(1, Math.max(0, p)) * 100) / 100,
+                D: Math.round(Math.min(1, Math.max(0, d)) * 200) / 200 });
+  }
+  let dragging = false;
+  svg.addEventListener("pointerdown", (e) => { dragging = true; svg.setPointerCapture(e.pointerId); phasePointer(e); });
+  svg.addEventListener("pointermove", (e) => { if (dragging) phasePointer(e); });
+  svg.addEventListener("pointerup", () => { dragging = false; });
+  svg.addEventListener("pointercancel", () => { dragging = false; });
+
+  // ------------------------------------------------------------------ controls
+  let replantTimer = 0;
+  function setParams(next) {
+    const densityChanged = next.D !== undefined && next.D !== params.D;
+    Object.assign(params, next);
+    $("density").value = params.D;
+    $("spread").value = params.p;
+    $("density-out").textContent = params.D.toFixed(3);
+    $("spread-out").textContent = params.p.toFixed(2);
+    document.documentElement.classList.toggle("rule-A", params.rule === "A");
+    document.documentElement.classList.toggle("rule-B", params.rule === "B");
+    updatePhase();
+    if (densityChanged) {
+      // same seed, new density: trees only appear or disappear, nothing else moves
+      clearTimeout(replantTimer);
+      replantTimer = setTimeout(() => newForest(true), 30);
+    }
+  }
+
+  $("density").addEventListener("input", (e) => setParams({ D: parseFloat(e.target.value) }));
+  $("spread").addEventListener("input", (e) => setParams({ p: parseFloat(e.target.value) }));
+  document.querySelectorAll('input[name="rule"]').forEach((r) =>
+    r.addEventListener("change", (e) => setParams({ rule: e.target.value })));
+  document.querySelectorAll('input[name="ignition"]').forEach((r) =>
+    r.addEventListener("change", (e) => { params.ignition = e.target.value; newForest(true); }));
+  $("size").addEventListener("input", (e) => {
+    params.sizeIdx = +e.target.value;
+    const L = SIZES[params.sizeIdx];
+    $("size-out").textContent = `${L} × ${L}`;
+    newForest(true);
+  });
+  function showSpeed() {
+    const s = SPEEDS[params.speedIdx];
+    $("speed-out").textContent = s === Infinity ? "instant" : `${s} steps/s`;
+  }
+  $("speed").value = params.speedIdx;
+  showSpeed();
+  $("speed").addEventListener("input", (e) => { params.speedIdx = +e.target.value; showSpeed(); });
+
+  $("go").addEventListener("click", () => { if (running) { stop(); status(); } else start(); });
+  $("step").addEventListener("click", () => {
+    stop();
+    if (!sim.front.length) {
+      if (sim.lit) newForest(true, true);
+      if (params.ignition === "click") { flash("Click a tree to light it."); return; }
+      igniteByMode();
+    } else {
+      step(sim, params.p, params.rule);
+    }
+    render();
+    if (!sim.front.length && sim.lit) ended(); else status();
+  });
+  $("replant").addEventListener("click", () => newForest(false));
+
+  document.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => {
+    let p = params.p;
+    if (criticalDensity(params.rule, p) === null) p = 0.9;
+    const dc = criticalDensity(params.rule, p);
+    const D = Math.min(1, Math.max(0, Math.round((dc + parseFloat(b.dataset.preset)) * 200) / 200));
+    setParams({ p, D });
+    clearTimeout(replantTimer);
+    if (params.ignition === "click") { params.ignition = "left"; $("ign-left").checked = true; }
+    newForest(false);
+    start();
+  }));
+
+  canvas.addEventListener("click", (ev) => {
+    const rect = canvas.getBoundingClientRect();
+    const c = Math.floor((ev.clientX - rect.left) / rect.width * sim.L);
+    const r = Math.floor((ev.clientY - rect.top) / rect.height * sim.L);
+    if (c < 0 || r < 0 || c >= sim.L || r >= sim.L) return;
+    const i = (r + 1) * sim.W + (c + 1);
+    if (sim.state[i] !== TREE) { flash("That cell has no unburned tree."); return; }
+    light(sim, [i]);
+    render();
+    if (!running) start();
+  });
+
+  // --------------------------------------------------------------- batch test
+  $("batch").addEventListener("click", async () => {
+    const btn = $("batch");
+    btn.disabled = true;
+    const N = 200, L = 64;
+    const base = (Math.random() * 2 ** 31) >>> 0;
+    const { D, p, rule } = params;
+    let crossed = 0;
+    for (let k = 0; k < N; k++) {
+      const s = plant(L, D, base + k);
+      lightEdge(s);
+      while (s.front.length) step(s, p, rule);
+      if (s.crossed) crossed++;
+      if (k % 20 === 19) {
+        $("batch-bar").style.width = `${100 * crossed / N}%`;
+        $("batch-out").textContent = `Running… ${k + 1} of ${N}`;
+        await new Promise((res) => setTimeout(res, 0));
+      }
+    }
+    const frac = crossed / N;
+    const se = Math.sqrt(frac * (1 - frac) / N);
+    $("batch-bar").style.width = `${100 * frac}%`;
+    $("batch-out").innerHTML = `Rule ${rule}, D = ${D.toFixed(3)}, p = ${p.toFixed(2)}: ` +
+      `<strong>${crossed} of ${N}</strong> fires crossed (${(100 * frac).toFixed(0)}% ± ${(100 * se).toFixed(0)}%). ` +
+      `Right on the critical line a square forest is crossed about half the time.`;
+    btn.disabled = false;
+  });
+
+  // ----------------------------------------------------------------- theming
+  const recolour = () => { readColours(); if (sim) render(); };
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", recolour);
+  new MutationObserver(recolour).observe(document.documentElement,
+    { attributes: true, attributeFilter: ["data-theme"] });
+
+  // ------------------------------------------------------------------- start
+  $("crit-L").textContent = `${CRIT.L} × ${CRIT.L}`;
+  readColours();
+  drawPhase();
+  setParams({ D: params.D, p: params.p, rule: params.rule });
+  newForest(true);
+  start();
+})();
+</script>
+<!--BODY-END-->
+</body>
+</html>
