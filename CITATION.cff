@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "forest-fire-percolation: a forest-fire cellular automaton validated against exact percolation theory"
+type: software
+authors:
+  - family-names: Misra
+    given-names: Aniruddh
+version: 0.1.0
+license: MIT
+keywords:
+  - cellular automata
+  - percolation
+  - forest fire
+  - phase transition
+  - finite-size scaling
