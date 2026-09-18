@@ -1,0 +1,17 @@
+landscape,kind,correlation,hurst,control,rows,cols,p_burn,rule,density_c,se,xi_cells,runs_per_point
+independent planting,iid,0,,,128,128,1,B,0.592673,0.000477803,0.63456,400
+clumped (correlation 1 cells),gaussian,1,,,128,128,1,B,0.515853,0.000748318,1.44009,400
+"clumped (correlation 1 cells), shuffled",gaussian,1,,shuffle,128,128,1,B,0.592763,0.000469935,0.631918,400
+clumped (correlation 2 cells),gaussian,2,,,128,128,1,B,0.50342,0.00106265,3.06864,400
+"clumped (correlation 2 cells), shuffled",gaussian,2,,shuffle,128,128,1,B,0.59313,0.00046804,0.632379,400
+clumped (correlation 4 cells),gaussian,4,,,128,128,1,B,0.50336,0.00145613,5.76721,400
+"clumped (correlation 4 cells), shuffled",gaussian,4,,shuffle,128,128,1,B,0.592103,0.000467924,0.631804,400
+clumped (correlation 8 cells),gaussian,8,,,128,128,1,B,0.502897,0.00220059,11.3838,400
+"clumped (correlation 8 cells), shuffled",gaussian,8,,shuffle,128,128,1,B,0.592913,0.000471525,0.630862,400
+clumped (correlation 16 cells),gaussian,16,,,128,128,1,B,0.49534,0.0031172,25.3613,400
+"clumped (correlation 16 cells), shuffled",gaussian,16,,shuffle,128,128,1,B,0.592613,0.000470229,0.634372,400
+clumped (correlation 32 cells),gaussian,32,,,128,128,1,B,0.50828,0.00773182,26.1902,400
+"clumped (correlation 32 cells), shuffled",gaussian,32,,shuffle,128,128,1,B,0.59343,0.000474535,0.62798,400
+fractal (H = 0.2),fractal,0,0.2,,128,128,1,B,0.521525,0.00200668,4.38069,400
+fractal (H = 0.5),fractal,0,0.5,,128,128,1,B,0.508438,0.0026106,11.3534,400
+fractal (H = 0.8),fractal,0,0.8,,128,128,1,B,0.504585,0.00401231,23.7372,400

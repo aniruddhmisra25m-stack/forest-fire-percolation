@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,geo]"
       - name: Unit and statistical tests
         run: pytest -q
       - name: Smoke-test the experiment scripts
@@ -26,6 +26,7 @@ jobs:
           python scripts/phase_diagram.py --quick --jobs 2
           python scripts/validate_thresholds.py --quick --jobs 2
           python scripts/finite_size_scaling.py --quick --jobs 2
+          python scripts/landscape_percolation.py --quick --jobs 2
 
   literature:
     # the slower checks against published thresholds (~1 min)

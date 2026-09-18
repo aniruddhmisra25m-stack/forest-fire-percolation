@@ -53,6 +53,9 @@ above that line.
   is seeded: results do not depend on the number of worker processes, and the
   37,800-fire sweep is bit-for-bit identical on Python 3.9 / NumPy 2.0 and
   Python 3.11 / NumPy 2.4.
+- **Real landscapes.** The same engine burns a canopy-cover raster, with
+  shuffle controls that separate the effect of fuel *pattern* from the effect
+  of fuel *amount*: clumping moves the tipping point from 0.593 to about 0.50.
 - **[Interactive demo](docs/index.html)** that runs the same rules in the
   browser.
 
@@ -192,6 +195,53 @@ at p = 1: 0.598 [0.595, 0.601] vs 0.593), because a single lit tree on a
 Fits for every spread probability: [`results/burn_fraction_fits.csv`](results/burn_fraction_fits.csv).
 </details>
 
+### Real landscapes: fuel that is clumped, not random
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="figures/landscape_percolation-dark.png">
+  <img src="figures/landscape_percolation.png" width="780"
+       alt="Three lattices at the same tree density: independently planted fuel and its shuffled copy both stop the fire, while clumped fuel carries it across. Crossing curves, critical density against correlation length, and burned fraction against density.">
+</picture>
+
+Independent planting is what percolation theory assumes, not what forests look
+like: real canopy cover is patchy, and cover in one place predicts cover next
+door. `firesim.landscape` turns a canopy-cover raster (or a synthetic
+landscape with a dial for clumping) into the same fuel map the engine burns,
+together with the controls that make the comparison mean something — the same
+cells **shuffled** (same density, no pattern) and **shuffled in blocks**
+(pattern kept only below the block size).
+
+| landscape | critical density | correlation length of the fuel map |
+|---|---:|---:|
+| independent planting | 0.5927 ± 0.0005 | 0.6 cells |
+| clumped, correlation 2 cells | 0.5034 ± 0.0011 | 3.1 cells |
+| clumped, correlation 8 cells | 0.5029 ± 0.0022 | 11.4 cells |
+| clumped, correlation 8 cells — **shuffled** | 0.5929 ± 0.0005 | 0.6 cells |
+| fractal, H = 0.2 / 0.5 / 0.8 | 0.522 / 0.508 / 0.505 | 4 / 11 / 24 cells |
+
+Clumping moves the tipping point a long way — from 0.593 down to about 1/2,
+where the symmetry between fuel and gaps takes over from lattice percolation —
+and every shuffled control lands back on 0.593, so the shift is the *pattern*,
+not the amount of fuel. Above the threshold it reverses: at D = 0.65 a fire
+started at one tree burns 89 % of an independently planted forest but only
+61 % of a clumped one, because it follows its patch and leaves the rest
+standing.
+
+Pointing this at a real forest is one command once you have a canopy-cover
+tile (Hansen Global Forest Change, ESA WorldCover, Copernicus, MODIS VCF,
+LANDFIRE — [docs/landscapes.md](docs/landscapes.md) has the details):
+
+```bash
+pip install -e ".[geo]"
+python scripts/landscape_percolation.py --raster cover.tif \
+       --window 12000 8000 2048 2048 --coarsen 4 --jobs 4
+```
+
+This is a connectivity experiment, not a fire forecast: the model still has no
+wind, slope, moisture or suppression, and *p* has no measured value. What it
+does say is where the tipping point sits for a given fuel arrangement, with a
+control attached.
+
 ## Try it
 
 **In the browser:** open [`docs/index.html`](docs/index.html) locally, or turn
@@ -210,7 +260,7 @@ anywhere, and test 200 fires at once.
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                 # 71 tests, ~30 s
+pytest                 # 90 tests, ~40 s
 pytest --runslow       # + 7 literature-recovery tests, under a minute in total
 ```
 
@@ -241,6 +291,7 @@ make animation
 | `scripts/phase_diagram.py` | `results/phase_diagram.csv` | ~7 min |
 | `scripts/finite_size_scaling.py` | `results/fss_*.csv` | ~4 min |
 | `scripts/burn_sweep.py` | `data/burn_sweep.csv`, `results/burn_sweep_summary.csv` | ~10 s |
+| `scripts/landscape_percolation.py` | `results/landscape_*.csv` | ~8 min |
 | `scripts/make_figures.py`, `make_animation.py` | `figures/` | seconds |
 
 Every script takes `--quick` for a smoke test and `--jobs N`.
@@ -250,17 +301,19 @@ Every script takes `--quick` for a smoke test and `--jobs N`.
 ```
 src/firesim/
   model.py         the cellular automaton (rules A and B, edge or centre ignition)
+  landscape.py     real cover rasters and clumped landscapes, with shuffle controls
   percolation.py   crossing probabilities, threshold estimation, cluster-labelling check
   fitting.py       logistic fits: least squares for averages, binomial MLE for counts
   theory.py        exact thresholds, published tables, proven bounds
   sweep.py         burn-fraction parameter sweeps
   datasets.py      loading and validating sweep data
   viz.py           colour palette (light/dark, colour-blind safe), GIF writer
-tests/             71 fast tests + 7 slow literature-recovery tests
+tests/             90 fast tests + 7 slow literature-recovery tests
 scripts/           one script per experiment, plus figures and the demo data
 results/           the measured numbers behind every figure (CSV / Markdown)
 figures/           every figure in light and dark versions, and the animation
 docs/model.md      model definition, proofs, estimation method, limitations
+docs/landscapes.md how to run the model on a real canopy-cover map
 docs/index.html    the interactive demo (docs/demo*.png are screenshots)
 exploratory/       the earlier machine-learning approach, kept for the record
 ```
@@ -294,8 +347,8 @@ reference point for thinking about fire spread, not a forecasting tool.
 
 ## Next steps
 
-Comparing the geometry of simulated burn scars with real burn-scar data is
-the next stage of this project.
+The landscape pipeline is the bridge to real data: the next stage is comparing
+the geometry of simulated burn scars with real burn-scar data.
 
 ## References
 

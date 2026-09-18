@@ -17,6 +17,7 @@ experiments:        ## regenerate every results/ file (~20 min on 2 cores)
 	$(PY) scripts/validate_thresholds.py --jobs $(JOBS)
 	$(PY) scripts/phase_diagram.py --jobs $(JOBS)
 	$(PY) scripts/finite_size_scaling.py --jobs $(JOBS)
+	$(PY) scripts/landscape_percolation.py --jobs $(JOBS)
 
 figures:            ## redraw every figure from results/ (seconds)
 	$(PY) scripts/make_figures.py
