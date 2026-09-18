@@ -22,7 +22,15 @@ out a window.
 Take the download URL from the dataset's own page rather than from this file —
 Hansen and WorldCover re-issue tiles with new version numbers every year, and
 the tile naming follows the top-left corner of the tile (for example
-`50N_120W`).
+`50N_120W`). As of September 2026 the Global Forest Change download page is
+
+```
+https://storage.googleapis.com/earthenginepartners-hansen/GFC-2025-v1.13/download.html
+```
+
+and a tile is one link from it:
+`Hansen_GFC-2025-v1.13_treecover2000_50N_120W.tif` (about 40000 x 40000
+pixels; `load_cover(..., window=...)` reads only the part you ask for).
 
 A 30 m dataset gives 0.09 ha per pixel. A 2048 × 2048 window is about 61 km
 across, which is a realistic size for a large fire.
