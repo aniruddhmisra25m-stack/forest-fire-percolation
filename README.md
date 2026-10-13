@@ -7,10 +7,7 @@ results from percolation theory.
 
 ![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-3776ab)
 ![License: MIT](https://img.shields.io/badge/license-MIT-2a78d6)
-![Tests: pytest](https://img.shields.io/badge/tests-pytest-eb6834)
-<!-- After pushing to GitHub, add the live test badge:
-[![tests](https://github.com/USER/forest-fire-percolation/actions/workflows/tests.yml/badge.svg)](https://github.com/USER/forest-fire-percolation/actions/workflows/tests.yml)
--->
+[![tests](https://github.com/aniruddhmisra25m-stack/forest-fire-percolation/actions/workflows/tests.yml/badge.svg)](https://github.com/aniruddhmisra25m-stack/forest-fire-percolation/actions/workflows/tests.yml)
 
 <p align="center">
   <img src="figures/fire_spread.gif" width="100%"
